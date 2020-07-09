@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %} | Private Diary{% endblock %}
+
+{% block active_diary_list %}active{% endblock %}
+<style>
+        .video-wrapper {
+  position: relative;
+  height: 0;
+  padding: 30px 0 56.25%;
+  overflow: hidden;
+    }
+
+    .video-wrapper iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+    }
+</style>
+<style>
+        ul { list-style: none; }
+    #recordings audio { display: block; margin-bottom: 10px; }
+</style>
+{% block contents %}
+
+<form class="row d-flex justify-content-center my-div-style" method="POST" id="upload_content" enctype="multipart/form-data">
+  <div class="col-md-8 my-div-style">
+        <div class="card text-white bg-info mb-3" style="max-width: 100%;">
+                <div class="d-flex align-items-center p-3 my-3 text-white-50 bg-info rounded shadow-sm">
+                <img class="mr-3" src="/static/img/quest.png" alt="" width="48" height="48">
+                <div class="lh-100">
+                  <h6 class="mb-0 text-white lh-100">{{title}}</h6>
+                    {% if isdone %}
+                  <small>上から順番に解いていこう。マイクマークをクリックして音声を入力しよう。</small>
+                    {% else %}
+                    <small>Today's aphorism：There is always light behind the clouds.</small>
+                    {% endif %}
+                </div>
+              </div>
+        </div>
+
+        {% for question in questions %}
+        <div class="card w-100">
+              <div class="card-body">
+                <h5 class="card-title">{{ forloop.counter }}問目</h5>
+                  <div class="row">
+                      <div class="col-sm-6">
+                          <div class="card card-body">
+                          <h5 class="card-title">まずは質問を聞いてみよう！</h5>
+                      <iframe id="ytplayer2" type="text/html" width="320" height="180"
+                          src="{{ question.question_url }}"
+                          frameborder="0"></iframe>
+                          </div>
+                      </div>
+                      <div class="col-sm-6">
+                          <div class="card card-body">
+                          <h5 class="card-title">ヒントを表示
+                                <input type="checkbox" id="{{'myCheck'|add:question.title }}" name="{{'myCheck'|add:question.title }}" onclick="myFunction('{{question.title}}')">
+                              </h5>
+                                <img src="{{ question.hint_photo.url}}" id="{{'img'|add:question.title }}" style="display:none" width="320" height="180"/>
+                        </div>
+                      </div>
+                  </div>
+                      <p></p>
+                        <button onclick="startRecording(this)">record</button>
+                         <button onclick="stopRecording(this, '{{question.title}}')" disabled>stop</button>
+                      <div class="row">
+                        <div id="{{'recording'|add:question.title}}"></div>
+                          <input type="file" id="{{'audio'|add:question.title}}" name="{{'audio'|add:question.title}}" accept="*" hidden>
+                      </div>
+                      <div class="row">
+                        <input id="{{'translation'|add:question.title}}" name="{{'translation'|add:question.title}}"></input><br>
+                          <input id="{{'confidence'|add:question.title}}" name="{{'confidence'|add:question.title}}"></input>
+                          <p id="{{'reg'|add:question.title}}">未登録</p>
+                      </div>
+
+            </div>
+        </div>
+        {% endfor %}
+      {% if isdone %}
+        <input type ="submit" class="btn btn-info mt-5 ml-2 mb-3" hidden></input>
+      {% else %}
+       <input type ="submit" class="btn btn-info mt-5 ml-2 mb-3"></input>
+      {% endif %}
+    </div>
+</form>
+
+
+
+
+    <script>
+        var apiKey = 'AIzaSyDNurjZdypLgMdfmjdH2FXX7aSnebK7WYo';
+      let audio_context;
+        let recorder;
+
+        function arrayBufferToBase64(buffer) {
+            let binary = '';
+            let bytes = new Float32Array(buffer);
+            let len = bytes.byteLength;
+            for (let i = 0; i < len; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return window.btoa(binary);
+        }
+
+        function startUserMedia(stream) {
+            let input = audio_context.createMediaStreamSource(stream);
+
+            recorder = new Recorder(input);
+        }
+
+    function startRecording(button){
+            audio_context.resume()
+            recorder && recorder.record();
+            button.disabled = true;
+            button.nextElementSibling.disabled = false;
+            console.log("record start")
+        };
+
+      function stopRecording(button, count) {
+        recorder && recorder.stop();
+        button.disabled = true;
+        button.previousElementSibling.disabled = false;
+        audioRecognize(count);
+
+        // create WAV download link using audio data blob
+        createDownloadLink(count);
+
+        recorder.clear();
+      }
+    function createDownloadLink(count) {
+        recorder && recorder.exportWAV(function(blob) {
+            console.log("test1")
+          var url = URL.createObjectURL(blob);
+          var li = document.createElement('li');
+          var au = document.createElement('audio');
+          var hf = document.createElement('a');
+            const recording = document.getElementById("recording"+count);
+
+            for (var i =recording.childNodes.length-1; i>=0; i--) {
+                recording.removeChild(recording.childNodes[i]);
+            }
+
+          au.controls = true;
+          au.src = url;
+          hf.href = url;
+          hf.download = new Date().toISOString() + '.wav';
+          hf.innerHTML = hf.download;
+          li.appendChild(au);
+          li.appendChild(hf);
+          console.log("test");
+          recording.appendChild(li);
+            document.getElementById("reg"+count).innerHTML = "登録済み";
+           // document.getElementById("audio"+count).value = hf.download;
+          console.log("--------");
+          console.log(document.getElementById("translation" + count).textContent);
+
+
+        });
+      }
+        function audioRecognize(count) {
+              recorder && recorder.exportWAV(function (blob) {
+                  let reader = new FileReader();
+                  reader.onload = function () {
+                      console.log("first try");
+                      let result = new Uint8Array(reader.result); // reader.result is ArrayBuffer
+                      let data = {
+                          "config": {
+                              "encoding": "LINEAR16",
+                              //"sampleRateHertz": 48000, // 環境によってかわるっぽいので変えてください(おそらくエラーに正しい値が出てくると思います.
+                              "languageCode": "en-US",
+                              "audio_channel_count": 2
+                          },
+                          "audio": {
+                              "content": arrayBufferToBase64(result)
+                          }
+                      };
+                      console.log("audio send...");
+                      fetch('https://speech.googleapis.com/v1/speech:recognize?key=' + apiKey, {
+                          method: 'POST',
+                          headers: {
+                              'Content-Type': 'application/json; charset=utf-8'
+                          },
+                          body: JSON.stringify(data)
+                      }).then(function (response) {
+                          return response.text();
+                      }).then(function (text) {
+                          let result_json = JSON.parse(text);
+                          //テキストデータ自体はresult_json.results[0].alternatives[0].transcriptに格納
+                          console.log("RESULT: " + text);
+                          console.log(result_json.results[0].alternatives[0].transcript);
+                          console.log(data)
+                          document.getElementById("translation" + count).value = result_json.results[0].alternatives[0].transcript;
+                          document.getElementById("confidence" + count).value = result_json.results[0].alternatives[0].confidence;
+                          console.log("--------")
+                          console.log(document.getElementById("translation" + count).textContent)
+                      });
+                  };
+                  reader.readAsArrayBuffer(blob)
+              });
+        }
+
+  window.onload = function init() {
+    try {
+      // webkit shim
+      window.AudioContext = window.AudioContext || window.webkitAudioContext;
+      navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia;
+      window.URL = window.URL || window.webkitURL;
+
+      audio_context = new AudioContext;
+    } catch (e) {
+      alert('No web audio support in this browser!');
+    }
+
+    navigator.getUserMedia({audio: true}, startUserMedia, function(e) {
+      __log('No live audio input: ' + e);
+    });
+  };
+
+      function myFunction(counter) {
+          // Get the checkbox
+          console.log("myCheck"+counter);
+          var checkBox = document.getElementById("myCheck"+counter);
+          // Get the output text
+          var text = document.getElementById("img"+counter);
+
+          // If the checkbox is checked, display the output text
+          if (checkBox.checked == true){
+            text.style.display = "block";
+            checkBox.style.display ="none";
+          } else {
+            text.style.display = "none";
+          }
+        }
+    </script>
+
+{% endblock %}
