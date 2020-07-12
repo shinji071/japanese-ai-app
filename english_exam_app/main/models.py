@@ -64,6 +64,7 @@ class Answer(models.Model):
     answer = models.CharField(verbose_name='タイトル', max_length=400)
     english_translated = models.CharField(verbose_name='英訳', max_length=400, default="-")
     answer2 = models.CharField(verbose_name='英訳→和訳', max_length=400, default="-")
+    similarity = models.CharField(verbose_name='信頼度', default="-1", max_length=50)
 
     confidence = models.CharField(verbose_name='信頼度', default="-1", max_length=50)
     voice_file = models.FileField()

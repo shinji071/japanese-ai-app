@@ -12,6 +12,8 @@ django-allauth = "^0.42.0"
 pillow = "^7.1.2"
 django-jet = "^1.0.8"
 django_ses = "^1.0.1"
+tensorflow_hub = "^0.8.0"
+tensorflow_text = "^2.2.1"
 
 [tool.poetry.dev-dependencies]
 

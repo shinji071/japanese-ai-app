@@ -6,6 +6,9 @@ from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views import generic
 from django.views.generic import View
+import tensorflow_hub as hub
+import numpy as np
+import tensorflow_text
 
 from .forms import InquiryForm, DiaryCreateForm
 from .models import Diary, Question, Answer
@@ -93,6 +96,11 @@ class DiaryDeleteView(LoginRequiredMixin, generic.DeleteView):
         messages.success(self.request, "日記を削除しました。")
         return super().delete(request, *args, **kwargs)
 
+
+
+# for avoiding error
+import ssl
+
 class ExamView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         chapter = Diary.objects.get(id=kwargs['pk'])
@@ -117,6 +125,19 @@ class ExamView(LoginRequiredMixin, View):
             ans2 = request.POST['answer_2{0}'.format(c.title)]
 
             answer = Answer(question=c, user=request.user, answer=ans1, english_translated=eng, answer2 = ans2)
+            ssl._create_default_https_context = ssl._create_unverified_context
+
+            def cos_sim(v1, v2):
+                return np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
+
+            embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder-multilingual/3")
+
+
+            texts = [ans1, ans2]
+            logger.debug("here comes.")
+            vectors = embed(texts)
+
+            answer.similarity = cos_sim(vectors[0], vectors[1])
             answer.save()
         return render(request, 'examination.html', {'questions': [], "title": "テストお疲れ様でした！先生のフィードバックを楽しみに待っていていね！", "isdone":True})
 
