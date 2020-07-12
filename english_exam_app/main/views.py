@@ -125,19 +125,19 @@ class ExamView(LoginRequiredMixin, View):
             ans2 = request.POST['answer_2{0}'.format(c.title)]
 
             answer = Answer(question=c, user=request.user, answer=ans1, english_translated=eng, answer2 = ans2)
-            ssl._create_default_https_context = ssl._create_unverified_context
+            #ssl._create_default_https_context = ssl._create_unverified_context
 
-            def cos_sim(v1, v2):
-                return np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
+            #def cos_sim(v1, v2):
+            #    return np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
 
-            embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder-multilingual/3")
+           # embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder-multilingual/3")
 
 
-            texts = [ans1, ans2]
-            logger.debug("here comes.")
-            vectors = embed(texts)
+            #texts = [ans1, ans2]
+            #logger.debug("here comes.")
+            #vectors = embed(texts)
 
-            answer.similarity = cos_sim(vectors[0], vectors[1])
+            #answer.similarity = cos_sim(vectors[0], vectors[1])
             answer.save()
         return render(request, 'examination.html', {'questions': [], "title": "テストお疲れ様でした！先生のフィードバックを楽しみに待っていていね！", "isdone":True})
 
