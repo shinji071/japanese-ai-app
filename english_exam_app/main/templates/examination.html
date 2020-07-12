@@ -24,6 +24,7 @@
         ul { list-style: none; }
     #recordings audio { display: block; margin-bottom: 10px; }
 </style>
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 {% block contents %}
 
 <form class="row d-flex justify-content-center my-div-style" method="POST" id="upload_content" enctype="multipart/form-data">
@@ -34,9 +35,9 @@
                 <div class="lh-100">
                   <h6 class="mb-0 text-white lh-100">{{title}}</h6>
                     {% if isdone %}
-                  <small>上から順番に解いていこう。マイクマークをクリックして音声を入力しよう。</small>
+                  <small>上から順番に解いていこう。回答は回答蘭に日本語で入力してね。</small>
                     {% else %}
-                    <small>Today's aphorism：There is always light behind the clouds.</small>
+                    <small>今日の格言：AIといえば構造計画研究所</small>
                     {% endif %}
                 </div>
               </div>
@@ -49,34 +50,25 @@
                   <div class="row">
                       <div class="col-sm-6">
                           <div class="card card-body">
-                          <h5 class="card-title">まずは質問を聞いてみよう！</h5>
-                      <iframe id="ytplayer2" type="text/html" width="320" height="180"
-                          src="{{ question.question_url }}"
-                          frameborder="0"></iframe>
+                          <h5 class="card-title">以下の問いに答えなさい</h5>
+                                <p> {{ question.content }}</p>
                           </div>
                       </div>
                       <div class="col-sm-6">
                           <div class="card card-body">
-                          <h5 class="card-title">ヒントを表示
-                                <input type="checkbox" id="{{'myCheck'|add:question.title }}" name="{{'myCheck'|add:question.title }}" onclick="myFunction('{{question.title}}')">
+                          <h5 class="card-title">ヒント
                               </h5>
-                                <img src="{{ question.hint_photo.url}}" id="{{'img'|add:question.title }}" style="display:none" width="320" height="180"/>
+                                <img src="{{ question.hint_photo.url}}" id="{{'img'|add:question.title }}" width="320" height="180"/>
                         </div>
                       </div>
                   </div>
                       <p></p>
-                        <button onclick="startRecording(this)">record</button>
-                         <button onclick="stopRecording(this, '{{question.title}}')" disabled>stop</button>
                       <div class="row">
-                        <div id="{{'recording'|add:question.title}}"></div>
-                          <input type="file" id="{{'audio'|add:question.title}}" name="{{'audio'|add:question.title}}" accept="*" hidden>
-                      </div>
-                      <div class="row">
-                        <input id="{{'translation'|add:question.title}}" name="{{'translation'|add:question.title}}"></input><br>
-                          <input id="{{'confidence'|add:question.title}}" name="{{'confidence'|add:question.title}}"></input>
-                          <p id="{{'reg'|add:question.title}}">未登録</p>
-                      </div>
-
+                          <input type="text" id="{{'answer_1'|add:question.title}}" name="{{'answer_1'|add:question.title}}"  style="width:100%" onblur="doCalc('{{question.title}}');" placeholder="ここに回答してね！"></input></div>
+                    <div class="row">
+                          <input type="text" id="{{'english'|add:question.title}}" name="{{'english'|add:question.title}}" style="width:100%" placeholder="英語訳（テスト用）"></input></div>
+                     <div class="row">
+                          <input type="text" id="{{'answer_2'|add:question.title}}" name="{{'answer_2'|add:question.title}}" style="width:100%" placeholder="英語→日本語訳（テスト用）"></input></div>
             </div>
         </div>
         {% endfor %}
@@ -92,148 +84,44 @@
 
 
     <script>
-        var apiKey = 'AIzaSyDNurjZdypLgMdfmjdH2FXX7aSnebK7WYo';
-      let audio_context;
-        let recorder;
+        var apiKey = 'AIzaSyCQtIVYwnyqwPZmlL1tJm6pNuNE-MzvcXY';
 
-        function arrayBufferToBase64(buffer) {
-            let binary = '';
-            let bytes = new Float32Array(buffer);
-            let len = bytes.byteLength;
-            for (let i = 0; i < len; i++) {
-                binary += String.fromCharCode(bytes[i]);
-            }
-            return window.btoa(binary);
+        function doCalc(qt) {
+            var eng = ""
+            ans1 = document.getElementById("answer_1" + qt).value;
+            translate(ans1,"en").then(function(response)
+            {
+                document.getElementById("english" + qt).value = response;
+                translate(response, 'ja').then(function(response2){
+                    console.log(response2);
+                    document.getElementById("answer_2" + qt).value = response2;
+                });
+            });
         }
 
-        function startUserMedia(stream) {
-            let input = audio_context.createMediaStreamSource(stream);
-
-            recorder = new Recorder(input);
-        }
-
-    function startRecording(button){
-            audio_context.resume()
-            recorder && recorder.record();
-            button.disabled = true;
-            button.nextElementSibling.disabled = false;
-            console.log("record start")
-        };
-
-      function stopRecording(button, count) {
-        recorder && recorder.stop();
-        button.disabled = true;
-        button.previousElementSibling.disabled = false;
-        audioRecognize(count);
-
-        // create WAV download link using audio data blob
-        createDownloadLink(count);
-
-        recorder.clear();
-      }
-    function createDownloadLink(count) {
-        recorder && recorder.exportWAV(function(blob) {
-            console.log("test1")
-          var url = URL.createObjectURL(blob);
-          var li = document.createElement('li');
-          var au = document.createElement('audio');
-          var hf = document.createElement('a');
-            const recording = document.getElementById("recording"+count);
-
-            for (var i =recording.childNodes.length-1; i>=0; i--) {
-                recording.removeChild(recording.childNodes[i]);
-            }
-
-          au.controls = true;
-          au.src = url;
-          hf.href = url;
-          hf.download = new Date().toISOString() + '.wav';
-          hf.innerHTML = hf.download;
-          li.appendChild(au);
-          li.appendChild(hf);
-          console.log("test");
-          recording.appendChild(li);
-            document.getElementById("reg"+count).innerHTML = "登録済み";
-           // document.getElementById("audio"+count).value = hf.download;
-          console.log("--------");
-          console.log(document.getElementById("translation" + count).textContent);
-
-
-        });
-      }
-        function audioRecognize(count) {
-              recorder && recorder.exportWAV(function (blob) {
-                  let reader = new FileReader();
-                  reader.onload = function () {
-                      console.log("first try");
-                      let result = new Uint8Array(reader.result); // reader.result is ArrayBuffer
-                      let data = {
-                          "config": {
-                              "encoding": "LINEAR16",
-                              //"sampleRateHertz": 48000, // 環境によってかわるっぽいので変えてください(おそらくエラーに正しい値が出てくると思います.
-                              "languageCode": "en-US",
-                              "audio_channel_count": 2
-                          },
-                          "audio": {
-                              "content": arrayBufferToBase64(result)
-                          }
-                      };
-                      console.log("audio send...");
-                      fetch('https://speech.googleapis.com/v1/speech:recognize?key=' + apiKey, {
+        function translate(from_str, target_lang ) {
+            return new Promise(function (resolve,reject){
+              let data =
+                   {
+                      "q": from_str,
+                      "target": target_lang,
+                      "format": "text"
+                  }
+              fetch('https://translation.googleapis.com/language/translate/v2?key=' + apiKey,{
                           method: 'POST',
                           headers: {
                               'Content-Type': 'application/json; charset=utf-8'
                           },
                           body: JSON.stringify(data)
-                      }).then(function (response) {
-                          return response.text();
-                      }).then(function (text) {
-                          let result_json = JSON.parse(text);
-                          //テキストデータ自体はresult_json.results[0].alternatives[0].transcriptに格納
-                          console.log("RESULT: " + text);
-                          console.log(result_json.results[0].alternatives[0].transcript);
-                          console.log(data)
-                          document.getElementById("translation" + count).value = result_json.results[0].alternatives[0].transcript;
-                          document.getElementById("confidence" + count).value = result_json.results[0].alternatives[0].confidence;
-                          console.log("--------")
-                          console.log(document.getElementById("translation" + count).textContent)
-                      });
-                  };
-                  reader.readAsArrayBuffer(blob)
+              }).then(function (response) {
+                  return response.text();
+              }).then(function (text) {
+                  result_json = JSON.parse(text);
+                  //テキストデータ自体はresult_json.results[0].alternatives[0].transcriptに格納
+                  console.log("RESULT: " + text);
+                  resolve(result_json.data.translations[0].translatedText);
               });
-        }
-
-  window.onload = function init() {
-    try {
-      // webkit shim
-      window.AudioContext = window.AudioContext || window.webkitAudioContext;
-      navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia;
-      window.URL = window.URL || window.webkitURL;
-
-      audio_context = new AudioContext;
-    } catch (e) {
-      alert('No web audio support in this browser!');
-    }
-
-    navigator.getUserMedia({audio: true}, startUserMedia, function(e) {
-      __log('No live audio input: ' + e);
-    });
-  };
-
-      function myFunction(counter) {
-          // Get the checkbox
-          console.log("myCheck"+counter);
-          var checkBox = document.getElementById("myCheck"+counter);
-          // Get the output text
-          var text = document.getElementById("img"+counter);
-
-          // If the checkbox is checked, display the output text
-          if (checkBox.checked == true){
-            text.style.display = "block";
-            checkBox.style.display ="none";
-          } else {
-            text.style.display = "none";
-          }
+        });
         }
     </script>
 

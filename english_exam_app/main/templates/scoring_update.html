@@ -18,13 +18,10 @@
             <tr>
                 <th>Name</th>
                 <th>Question</th>
-                <th>Answer(wav)</th>
-                <th>Answer(txt)</th>
-                <th>Confidence</th>
-                <th>Score1</th>
-                <th>Score2</th>
-                <th>Comment</th>
-
+                <th>Answer</th>
+                <th>English</th>
+                <th>EnToJa</th>
+                <th>CreatedAt</th>
             </tr>
         </thead>
         <tbody>
@@ -32,16 +29,10 @@
             <tr>
                 <td>{{ ans.user}}</td>
                 <td> {{ans.question}}</td>
-                <td><audio
-        controls
-        src= {{ ans.voice_file }}>
-            Your browser does not support the
-            <code>audio</code> element.
-    </audio></td>
                 <td> {{ ans.answer}}</td>
-                <th> {{ ans.confidence }}</th>
-                <td> {{ ans.auto_point }}</td>
-                <td> {{ ans.auto_point2 }}</td>
+                <th> {{ ans.english_translated }}</th>
+                <td> {{ ans.answer2 }}</td>
+                <td> {{ ans.created_at }}</td>
                 <td> </td>
 
             </tr>

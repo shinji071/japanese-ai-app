@@ -112,23 +112,11 @@ class ExamView(LoginRequiredMixin, View):
         contents = Question.objects.filter(chapter=chapter.id)
 
         for c in contents:
-            trans = request.POST['translation{0}'.format(c.title)]
-            answer = Answer(question=c, user=request.user, answer=trans,
-                             confidence=request.POST['confidence{0}'.format(c.title)])
-            trans_edit = trans.lower().replace(" ","").replace(".","").replace(",","")
-            lst_answer_1 = c.answer_1.split('/')
-            lst_answer_1 = map(lambda x: x.lower().replace(" ","").replace(".","").replace(",",""), lst_answer_1)
-            logger.debug(lst_answer_1)
-            lst_answer_2 = c.answer_2.split('/')
-            lst_answer_2 = map(lambda x: x.lower().replace(" ","").replace(".","").replace(",",""), lst_answer_2)
-            lst_answer_3 = c.answer_3.split('/')
-            lst_answer_3 = map(lambda x: x.lower().replace(" ","").replace(".","").replace(",",""), lst_answer_3)
-            if trans_edit in lst_answer_1:
-                answer.auto_point = 3
-            elif trans_edit in lst_answer_2:
-                answer.auto_point = 2
-            if trans_edit in lst_answer_3:
-                answer.auto_point2 = 3
+            ans1 = request.POST['answer_1{0}'.format(c.title)]
+            eng = request.POST['english{0}'.format(c.title)]
+            ans2 = request.POST['answer_2{0}'.format(c.title)]
+
+            answer = Answer(question=c, user=request.user, answer=ans1, english_translated=eng, answer2 = ans2)
             answer.save()
         return render(request, 'examination.html', {'questions': [], "title": "テストお疲れ様でした！先生のフィードバックを楽しみに待っていていね！", "isdone":True})
 

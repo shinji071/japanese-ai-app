@@ -62,11 +62,16 @@ class Answer(models.Model):
     question = models.ForeignKey(Question, verbose_name="テスト", on_delete=models.PROTECT)
     user = models.ForeignKey(CustomUser, verbose_name='ユーザー', on_delete=models.PROTECT, null=True)
     answer = models.CharField(verbose_name='タイトル', max_length=400)
+    english_translated = models.CharField(verbose_name='英訳', max_length=400, default="-")
+    answer2 = models.CharField(verbose_name='英訳→和訳', max_length=400, default="-")
+
     confidence = models.CharField(verbose_name='信頼度', default="-1", max_length=50)
     voice_file = models.FileField()
     auto_point = models.IntegerField(verbose_name="知識・技能", default=-1)
     auto_point2 = models.IntegerField(verbose_name="思考・判断・表現", default=-1)
 
+    created_at = models.DateTimeField(verbose_name='作成日時', auto_now_add=True)
+    updated_at = models.DateTimeField(verbose_name='更新日時', auto_now=True)
     class Meta:
         verbose_name_plural = '回答'
 

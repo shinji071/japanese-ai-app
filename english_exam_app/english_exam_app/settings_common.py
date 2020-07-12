@@ -104,7 +104,7 @@ WSGI_APPLICATION = 'english_exam_app.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'english_exam_app',
+        'NAME': 'japanese_ai',
         'USER': os.environ.get('DB_USER'),
         'PASSWORD': os.environ.get('DB_PASSWORD'),
         'HOST': '',
